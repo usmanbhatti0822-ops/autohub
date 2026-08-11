@@ -34,12 +34,12 @@ class FeaturedCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Hero(
-                    tag: 'listing-image-${listing.id}',
-                    child: listing.photoUrls.isNotEmpty
-                        ? CachedNetworkImage(imageUrl: listing.photoUrls.first, fit: BoxFit.cover)
-                        : Container(color: AppColors.surface),
-                  ),
+                  // Not wrapped in a Hero: this card and the "All Listings" grid below it
+                  // can both show the same listing at once, and Hero tags must be unique
+                  // within a subtree. The grid's ListingCard owns the hero-to-detail transition.
+                  listing.photoUrls.isNotEmpty
+                      ? CachedNetworkImage(imageUrl: listing.photoUrls.first, fit: BoxFit.cover)
+                      : Container(color: AppColors.surface),
                   Positioned(top: 8, left: 8, child: CategoryChip(category: listing.category)),
                   Positioned(
                     top: 8,
