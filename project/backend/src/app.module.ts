@@ -13,6 +13,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 
 import { User } from './modules/users/entities/user.entity';
 import { CarListing } from './modules/listings/entities/listing.entity';
@@ -57,6 +58,7 @@ import { PaymentOrder } from './modules/payments/entities/payment-order.entity';
     WalletModule,
     PaymentsModule,
     NotificationsModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

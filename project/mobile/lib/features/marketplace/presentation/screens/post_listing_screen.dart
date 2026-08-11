@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/loading_button.dart';
+import '../../../../core/widgets/photo_picker.dart';
+import '../../../uploads/data/uploads_repository.dart';
 import '../../data/listings_repository.dart';
 import '../../domain/car_listing.dart';
 
@@ -25,18 +28,25 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
   String _transmission = 'automatic';
   String _fuelType = 'petrol';
   String _category = 'sedan';
+  List<XFile> _photos = [];
   bool _submitting = false;
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
     try {
-      // No real S3 upload wired up yet (see ListingsRepository/backend notes),
-      // so new demo listings get a deterministic placeholder photo instead
-      // of shipping with a broken/blank image.
-      final seed = '${_make.text}-${_model.text}-${DateTime.now().millisecondsSinceEpoch}'
-          .toLowerCase()
-          .replaceAll(RegExp(r'\s+'), '');
+      List<String> photoUrls;
+      if (_photos.isNotEmpty) {
+        photoUrls = await ref.read(uploadsRepositoryProvider).uploadImages(_photos);
+      } else {
+        // No photos picked — fall back to a placeholder so the listing
+        // never ships with a broken/blank image.
+        final seed = '${_make.text}-${_model.text}-${DateTime.now().millisecondsSinceEpoch}'
+            .toLowerCase()
+            .replaceAll(RegExp(r'\s+'), '');
+        photoUrls = ['https://picsum.photos/seed/$seed/900/600'];
+      }
+
       final listing = CarListing(
         id: '',
         make: _make.text.trim(),
@@ -48,7 +58,7 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
         transmission: _transmission,
         fuelType: _fuelType,
         category: _category,
-        photoUrls: ['https://picsum.photos/seed/$seed/900/600'],
+        photoUrls: photoUrls,
         description:
             _description.text.trim().isEmpty ? null : _description.text.trim(),
         isVerified: false,
@@ -79,26 +89,8 @@ class _PostListingScreenState extends ConsumerState<PostListingScreen> {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              margin: const EdgeInsets.only(bottom: AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.primarySoft,
-                borderRadius: BorderRadius.circular(AppRadii.md),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 18),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      "Demo mode: a placeholder photo is used since photo upload isn't wired to storage yet.",
-                      style: TextStyle(color: AppColors.primaryDark, fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            PhotoPickerGrid(onChanged: (files) => setState(() => _photos = files)),
+            const SizedBox(height: AppSpacing.md),
             _field(_make, 'Make (e.g. Toyota)'),
             _field(_model, 'Model (e.g. Corolla)'),
             _field(_year, 'Year', keyboardType: TextInputType.number),

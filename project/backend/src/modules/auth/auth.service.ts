@@ -93,7 +93,12 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.usersRepo.findOne({ where: { email: dto.email } });
+    // passwordHash is `select: false` on the entity, so it must be explicitly re-added here.
+    const user = await this.usersRepo
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email: dto.email })
+      .getOne();
     if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid email or password');
     }

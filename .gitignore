@@ -8,6 +8,7 @@ project/backend/node_modules/
 project/backend/dist/
 project/backend/coverage/
 project/backend/*.log
+project/backend/uploads/
 
 # Mobile (Flutter) — build artifacts not already covered by project/mobile/.gitignore
 project/mobile/build/
@@ -20,3 +21,6 @@ project/mobile/.flutter-plugins-dependencies
 Thumbs.db
 .vscode/
 .idea/
+
+# Claude Code tooling artifacts (not project content)
+.claude/

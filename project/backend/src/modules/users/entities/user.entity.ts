@@ -34,7 +34,10 @@ export class User {
   @Column({ nullable: true, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  // select: false — never included in a normal find()/relation load, so it
+  // can't leak through e.g. GET /listings' `seller` relation. Login must
+  // explicitly re-select it (see AuthService.login).
+  @Column({ type: 'varchar', nullable: true, select: false })
   passwordHash: string | null;
 
   @Column({ default: false })

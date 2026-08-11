@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/loading_button.dart';
+import '../../../../core/widgets/photo_picker.dart';
+import '../../../uploads/data/uploads_repository.dart';
 import '../../data/rentals_repository.dart';
 import '../../domain/rental_models.dart';
 
@@ -25,15 +28,22 @@ class _ListForRentScreenState extends ConsumerState<ListForRentScreen> {
   String _fuelType = 'petrol';
   String _category = 'sedan';
   bool _driverAvailable = false;
+  List<XFile> _photos = [];
   bool _submitting = false;
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
     try {
-      final seed = '${_make.text}-${_model.text}-${DateTime.now().millisecondsSinceEpoch}'
-          .toLowerCase()
-          .replaceAll(RegExp(r'\s+'), '');
+      List<String> photoUrls;
+      if (_photos.isNotEmpty) {
+        photoUrls = await ref.read(uploadsRepositoryProvider).uploadImages(_photos);
+      } else {
+        final seed = '${_make.text}-${_model.text}-${DateTime.now().millisecondsSinceEpoch}'
+            .toLowerCase()
+            .replaceAll(RegExp(r'\s+'), '');
+        photoUrls = ['https://picsum.photos/seed/$seed/900/600'];
+      }
       final vehicle = RentalVehicle(
         id: '',
         make: _make.text.trim(),
@@ -47,7 +57,7 @@ class _ListForRentScreenState extends ConsumerState<ListForRentScreen> {
         dailyRate: double.parse(_dailyRate.text.trim()),
         securityDeposit: double.tryParse(_securityDeposit.text.trim()) ?? 0,
         driverAvailable: _driverAvailable,
-        photoUrls: ['https://picsum.photos/seed/$seed/900/600'],
+        photoUrls: photoUrls,
       );
       await ref.read(rentalsRepositoryProvider).create(vehicle);
       if (!mounted) return;
@@ -73,26 +83,8 @@ class _ListForRentScreenState extends ConsumerState<ListForRentScreen> {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              margin: const EdgeInsets.only(bottom: AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.primarySoft,
-                borderRadius: BorderRadius.circular(AppRadii.md),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 18),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      "Demo mode: a placeholder photo is used since photo upload isn't wired to storage yet.",
-                      style: TextStyle(color: AppColors.primaryDark, fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            PhotoPickerGrid(onChanged: (files) => setState(() => _photos = files)),
+            const SizedBox(height: AppSpacing.md),
             _field(_make, 'Make'),
             _field(_model, 'Model'),
             _field(_year, 'Year', keyboardType: TextInputType.number),
