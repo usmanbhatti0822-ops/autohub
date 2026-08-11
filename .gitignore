@@ -1,0 +1,22 @@
+# Environment / secrets
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Backend (NestJS)
+project/backend/node_modules/
+project/backend/dist/
+project/backend/coverage/
+project/backend/*.log
+
+# Mobile (Flutter) — build artifacts not already covered by project/mobile/.gitignore
+project/mobile/build/
+project/mobile/.dart_tool/
+project/mobile/.flutter-plugins
+project/mobile/.flutter-plugins-dependencies
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
